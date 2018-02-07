@@ -1,0 +1,19 @@
+Package: grasshopper
+Type: Package
+Title: What the Package Does (Title Case)
+Date: 2018-01-07
+Version: 0.1.0
+Authors@R: person("George", "Vega Yon", role = c("aut", "cre"), email = "g.vegayon@gmail.com")
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+LinkingTo: 
+    Rcpp
+Imports: 
+    Rcpp,
+    graphics,
+    utils
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 6.0.1.9000
