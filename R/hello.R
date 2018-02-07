@@ -130,12 +130,12 @@ plot_seq <- function(x, top=4, bottom=4) {
 
 
 
-
-# len <- 10
+#
+# len <- 30
 # pos <- c(50, 50)
 #
 # set.seed(1222)
-# dat <- lapply(1:1000, function(x) grasshopper:::hop(pos, len, ring = .5))
+# dat <- lapply(1:1000, function(x) grasshopper:::hop(pos, len, ring = .99))
 # dat <- do.call(rbind, dat)
 #
 # plot(dat, xlim = c(1, 100), ylim=c(1, 100), pch=20, cex=.5,

@@ -141,7 +141,7 @@ double grasshopper_stat(
 ) {
 
   // Getting the positions
-  IntegerVector p = sample(positions.nrow() - 1u, nsim, true);
+  IntegerVector p = sample(positions.nrow(), nsim, true) - 1;
 
   double prob = 0.0;
   NumericVector pos(2);
