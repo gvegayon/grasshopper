@@ -7,72 +7,81 @@
 #' @param area Integer scalar.
 #' @param len Integer scalar.
 #' @param subsim Integer scalar.
-#' @param ring Numeric scalar. Size of the inner circle, if any. If set to 0
-#' then the grasshopper jumps between its spot and `len` uniformly, if greater
-#' than 1 then the grasshopper always jumps `len`.
 #' @return A list
 #' @export
 #'
 #' @examples
 #' 1+1
 grasshopper <- function(
+  grass = NULL,
   nsim = 10000,
   area = 100,
   len  = 3,
   subsim = 5000,
-  nchanges = 5,
-  ring = 0.99,
-  verb = TRUE
+  temp = 5,
+  verb = TRUE,
+  continuous = FALSE
 ) {
 
   # Initialize the algorithm
   probs   <- vector("double", nsim)
   configs <- vector("list", nsim)
-  U       <- runif(nsim)
 
   # Generating the seed grass
-  dat0 <- sim_grass_joint(area, area, area)
+  canvas <- floor(sqrt(area)*4)
+  if (length(grass)) {
+    dat0 <- grass
+  } else {
+    dat0 <- if (continuous)
+      sim_grass_joint(canvas, canvas, area)
+    else
+      sim_grass(canvas, canvas, area)
+  }
+
 
   probs[1L] <- grasshopper_stat(
     grass     = dat0$grass,
     positions = dat0$positions,
     nsim      = subsim,
-    length    = len,
-    ring      = ring
+    length    = len
   )
 
   configs[[1L]] <- dat0$positions
   curbest <- 1L
   dat <- dat0
 
+  message(sprintf("The new best has a prob: %.4f (iter #%i)", probs[1], 1))
+  image(dat$grass, col = c("brown", "green"))
+
+  # Simulated annealing part
+  temp <- ceiling(
+    (area^2)*((1/1:nsim)^(1/temp) - (1/nsim)^(1/temp))/
+      (1 - (1/nsim)^(1/temp))
+    ) + 1L
+
+
+
   for (i in 2L:nsim) {
 
     # Mutating the grass
-    dat <- mutate_grass(dat$grass, dat$positions, nchanges = nchanges)
+    dat <- mutate_grass(dat$grass, dat$positions, nchanges = temp[i])
 
     # Computing probs and mutating
     probs[i] <- grasshopper_stat(
       grass     = dat$grass,
       positions = dat$positions,
       nsim      = subsim,
-      length    = len,
-      ring      = ring
+      length    = len
     )
 
     configs[[i]] <- dat$positions
 
     # Hastings ratio
-    if (probs[curbest] < probs[i]) {
+    if (probs[i] > probs[curbest]) {
 
       # Updating the ids
       curbest <- i
       dat0    <- dat
-
-      if (verb) {
-        message(sprintf("The new best has a prob: %.4f (iter #%i)", probs[i], i))
-        image(dat$grass, col = c("brown", "green"))
-      }
-
 
     } else {
 
@@ -81,13 +90,19 @@ grasshopper <- function(
 
     }
 
+    if (verb & !(i %% 200)) {
+      message(sprintf("Current best has a prob: %.4f at iter %i of %i. Current temp: %i", probs[curbest], curbest, i, temp[i]))
+      image(dat$grass, col = c("brown", "green"))
+    }
+
   }
 
   # return
   structure(
     list(
       probabilities = probs,
-      positions = configs
+      positions = configs,
+      grass = dat0
     ),
     class = "grasshopper_sim"
   )
@@ -144,7 +159,7 @@ plot_seq <- function(x, top=4, bottom=4) {
 
 
 
-#
+
 # len <- 30
 # pos <- c(50, 50)
 #

@@ -19,10 +19,6 @@ grasshopper(nsim = 10000, area = 100, len = 3, subsim = 5000,
 
 \item{subsim}{Integer scalar.}
 
-\item{ring}{Numeric scalar. Size of the inner circle, if any. If set to 0
-then the grasshopper jumps between its spot and \code{len} uniformly, if greater
-than 1 then the grasshopper always jumps \code{len}.}
-
 \item{x}{An object of class \code{grasshopper_sim}}
 
 \item{y}{ignored.}

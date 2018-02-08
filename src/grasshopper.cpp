@@ -7,24 +7,24 @@ NumericVector hop(
     double length,
     int xmax = 100,
     int ymax = 100,
-    double ring = 0.0
+    double theta = 3.0*PI
 ) {
 
   // What is the limit to jump
-  NumericVector y = rnorm(2u, 0, 1);
 
-  // Normalizing
-  y = y/sqrt(sum(pow(y, 2.0)));
+  if (theta > 2.0*PI)
+    theta = unif_rand()*2.0*PI;
 
-  // Rescaling
-  if (ring < 1.0) {
-    double s = pow(length, 2);
-    NumericVector u = pow(runif(2u, s*fmin(ring, 1.0), s), 0.5);
-    y = y * u;
-  }
+  NumericVector y(2);
 
+  y.at(0) = pos.at(0) + (length + 1) * sin(theta);
+  y.at(1) = pos.at(1) + (length + 1) * cos(theta);
 
-  y = floor(pos + y);
+  if (y.at(0) > pos.at(0)) y.at(0) = floor(y.at(0));
+  else y.at(0) = ceilf(y.at(0));
+
+  if (y.at(1) > pos.at(1)) y.at(1) = floor(y.at(1));
+  else y.at(1) = ceilf(y.at(1));
 
   if ((y[0] >= 0 && y[0] < xmax) && (y[1] >= 0 && y[1] < ymax))
     return y;
@@ -133,60 +133,6 @@ List sim_grass_joint(
 }
 
 // [[Rcpp::export]]
-bool is_bridge(
-  int x,
-  int y,
-  const IntegerMatrix & grass,
-  bool recursive = true
-) {
-
-  int xmax = grass.ncol();
-  int ymax = grass.nrow();
-
-  // Looking at the neighbors
-  int nneigh = 0;
-  for (int i = -1; i < 2; i++)
-    for (int j = -1; j < 2; j++) {
-
-      // Don't care about myself
-      if (i == 0 & j == 0)
-        continue;
-
-      // Is it in the border?
-      if ((x + j) < 0 | (x + j) >= xmax)
-        continue;
-
-      if ((y + i) < 0 | (y + i) >= ymax)
-        continue;
-
-      // We found a neighbor
-      if (grass(y + i, x + j) > 0) {
-
-        // If this is the recursive, let's count their neighbors
-        if (recursive) {
-
-          // Am I the only neighbour of my neighbour?
-          if (!is_bridge(x+j, y+i, grass, false))
-            continue;
-           else
-            return true;
-
-        } else {
-          // How many neighbours
-          nneigh++;
-        }
-      }
-    }
-
-  // If only a single neighbour, then it is a bridge
-  if (nneigh == 1)
-    return true;
-
-  return false;
-
-}
-
-// [[Rcpp::export]]
 List mutate_grass(
   const IntegerMatrix & grass,
   const NumericMatrix & positions,
@@ -200,19 +146,21 @@ List mutate_grass(
   int xmax = grass.ncol();
   int ymax = grass.nrow();
   int x, y;
-  while (nchanges > 0) {
+  while (--nchanges > 0) {
 
     // Random points
     p_more = floor(unif_rand()*n);
     p_less = floor(unif_rand()*n);
 
-    // Is it the same point
-    if (p_less == p_more)
-      continue;
+    // // Is it the same point
+    // if (p_less == p_more)
+    //   continue;
 
-    // Picking next pos
+    // // Picking next pos
     x = newpositions.at(p_more, 1) + rindex();
     y = newpositions.at(p_more, 0) + rindex();
+    // x = floor(unif_rand()*xmax/4)*(unif_rand() > 0.5? -1 : 1);
+    // y = floor(unif_rand()*ymax/4)*(unif_rand() > 0.5? -1 : 1);
 
     // Checking bounds
     if (x < 0 | y < 0)
@@ -223,10 +171,6 @@ List mutate_grass(
 
     // Already painted?
     if (newgrass.at(y, x) > 0)
-      continue;
-
-    // Is the point to remove a bridge?
-    if (is_bridge(newpositions(p_less, 1), newpositions(p_less, 0), newgrass))
       continue;
 
     // Is the old point removing the new one?
@@ -245,8 +189,6 @@ List mutate_grass(
     newpositions.at(p_less, 1) = x;
     newpositions.at(p_less, 0) = y;
 
-    --nchanges;
-
   }
 
   return List::create(
@@ -261,8 +203,7 @@ double grasshopper_stat(
     const IntegerMatrix & grass,
     const NumericMatrix & positions,
     int nsim,
-    double length,
-    double ring
+    double length
 ) {
 
   // Getting the positions
@@ -276,7 +217,7 @@ double grasshopper_stat(
 
     // Fecthing and updating position
     pos = positions.row(p[i]);
-    pos = hop(pos, length, xmax, ymax, ring);
+    pos = hop(pos, length, xmax, ymax);
 
     // Did he fell outside?
     if (pos[0] == -1)
@@ -289,5 +230,58 @@ double grasshopper_stat(
 
   return prob;
 
+}
+
+// [[Rcpp::export]]
+bool in_hop(
+  int i,
+  int j,
+  const NumericMatrix & positions,
+  double length
+) {
+
+  double y = positions(j, 0) - positions(i, 0);
+  double x = positions(j, 1) - positions(i, 1);
+  double theta = atan2(y, x);
+
+  NumericVector where = positions.row(i);
+
+  where = hop(where, length, 1e5, 1e5, theta);
+
+  return where.at(0) == positions.at(j, 0) &
+    where.at(1) == positions.at(j, 1);
+
+}
+
+// [[Rcpp::export]]
+double grasshopper_stat_deterministic(
+    const IntegerMatrix & grass,
+    const NumericMatrix & positions,
+    double length
+) {
+
+  // Parameters
+  double prob = 0.0, probi;
+  int n = positions.nrow();
+  double a = 2.0*PI*length;
+
+  for (int i = 0; i < n; ++i) {
+
+    probi = 0.0;
+    for (int j = 0; j < n; ++j) {
+
+      if (i==j)
+        continue;
+
+      if (in_hop(i, j, positions, length))
+        probi += 1.0/a;
+
+    }
+
+    prob += probi/((double)n);
+
+  }
+
+  return prob;
 }
 

@@ -30,15 +30,17 @@ image(x$grass, col = c("white", "darkgreen"))
 ```
 
 ```{r example2, cache=TRUE}
-set.seed(2)
+set.seed(5)
 ans <- grasshopper(
-  area = 100, len = 10,
-  nsim = 10000, # number of grass simulations
-  subsim = 5e3, # number of times that we make the bug jump in each sim
-  ring = .99, nchanges = 10
+  grass  = NULL,
+  area   = 15^2,
+  len    = 15*0.3,
+  nsim   = 1e4, # number of grass simulations
+  subsim = 2e4 # number of times that we make the bug jump in each sim
   )
 
 # Plotting the best and the worse
 plot_seq(ans)
+plot(ans$probabilities, type="l")
 ```
 
