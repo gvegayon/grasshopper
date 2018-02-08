@@ -5,17 +5,13 @@
 \alias{plot.grasshopper_sim}
 \title{The grasshopper problem}
 \usage{
-grasshopper(nsim = 10000, xmax = 100, ymax = 100, area = 100, len = 3,
-  subsim = 5000, ring = 0.5, ncpus = parallel::detectCores())
+grasshopper(nsim = 10000, area = 100, len = 3, subsim = 5000,
+  nchanges = 5, ring = 0.99, verb = TRUE)
 
 \method{plot}{grasshopper_sim}(x, y = NULL, id = x$sol, ...)
 }
 \arguments{
 \item{nsim}{Integer scalar.}
-
-\item{xmax}{Integer scalar.}
-
-\item{ymax}{Integer scalar.}
 
 \item{area}{Integer scalar.}
 
@@ -27,8 +23,6 @@ grasshopper(nsim = 10000, xmax = 100, ymax = 100, area = 100, len = 3,
 then the grasshopper jumps between its spot and \code{len} uniformly, if greater
 than 1 then the grasshopper always jumps \code{len}.}
 
-\item{ncpus}{Integer scalar.}
-
 \item{x}{An object of class \code{grasshopper_sim}}
 
 \item{y}{ignored.}
@@ -36,6 +30,10 @@ than 1 then the grasshopper always jumps \code{len}.}
 \item{id}{Id of the grass to plot.}
 
 \item{...}{Ignored.}
+
+\item{xmax}{Integer scalar.}
+
+\item{ymax}{Integer scalar.}
 }
 \value{
 A list

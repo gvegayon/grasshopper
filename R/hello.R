@@ -10,8 +10,6 @@
 #' @param ring Numeric scalar. Size of the inner circle, if any. If set to 0
 #' then the grasshopper jumps between its spot and `len` uniformly, if greater
 #' than 1 then the grasshopper always jumps `len`.
-#' @param ncpus Integer scalar.
-#'
 #' @return A list
 #' @export
 #'
@@ -19,62 +17,78 @@
 #' 1+1
 grasshopper <- function(
   nsim = 10000,
-  xmax = 100,
-  ymax = 100,
   area = 100,
   len  = 3,
   subsim = 5000,
-  ring = 0.5,
-  ncpus = parallel::detectCores()
+  nchanges = 5,
+  ring = 0.99,
+  verb = TRUE
 ) {
 
-  cl  <- parallel::makeCluster(ncpus)
-  on.exit(parallel::stopCluster(cl))
+  # Initialize the algorithm
+  probs   <- vector("double", nsim)
+  configs <- vector("list", nsim)
+  U       <- runif(nsim)
 
-  # Loading the package
-  invisible(parallel::clusterEvalQ(cl, library(grasshopper)))
+  # Generating the seed grass
+  dat0 <- sim_grass_joint(area, area, area)
 
-  # Making the call
-  ans <- parallel::parLapply(
-    cl, 1L:nsim,
-    function(i, xmax, ymax, area, len, subsim, ring) {
-
-      # Simulating grass
-      s <- sim_grass_joint(xmax, ymax, area)
-
-      # Returning
-      list(
-        s$positions,
-        grasshopper_stat(
-          grass     = s$grass,
-          positions = s$positions,
-          nsim      = subsim,
-          length    = len,
-          ring      = ring
-        )
-      )
-
-    }, xmax = xmax, ymax = ymax, area = area, len = len, subsim = subsim, ring = ring)
-
-  # Sorting output
-  ans <- list(
-    positions     = lapply(ans, "[[", 1L),
-    probabilities = sapply(ans, "[[", 2L)
+  probs[1L] <- grasshopper_stat(
+    grass     = dat0$grass,
+    positions = dat0$positions,
+    nsim      = subsim,
+    length    = len,
+    ring      = ring
   )
 
-  # Which one was the best?
-  ans$sol <- which.max(ans$probabilities)
-  ans$params <-
-    list(
-      ymax = ymax,
-      xmax = xmax,
-      len  = len,
-      area = area
+  configs[[1L]] <- dat0$positions
+  curbest <- 1L
+  dat <- dat0
+
+  for (i in 2L:nsim) {
+
+    # Mutating the grass
+    dat <- mutate_grass(dat$grass, dat$positions, nchanges = nchanges)
+
+    # Computing probs and mutating
+    probs[i] <- grasshopper_stat(
+      grass     = dat$grass,
+      positions = dat$positions,
+      nsim      = subsim,
+      length    = len,
+      ring      = ring
     )
+
+    configs[[i]] <- dat$positions
+
+    # Hastings ratio
+    if (probs[curbest] < probs[i]) {
+
+      # Updating the ids
+      curbest <- i
+      dat0    <- dat
+
+      if (verb) {
+        message(sprintf("The new best has a prob: %.4f (iter #%i)", probs[i], i))
+        image(dat$grass, col = c("brown", "green"))
+      }
+
+
+    } else {
+
+      # Getting back to the current best
+      dat <- dat0
+
+    }
+
+  }
 
   # return
   structure(
-    ans,
+    list(
+      probabilities = probs,
+      positions = configs
+    ),
     class = "grasshopper_sim"
   )
 }

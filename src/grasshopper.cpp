@@ -61,6 +61,21 @@ List sim_grass(
 }
 
 // [[Rcpp::export]]
+int rindex() {
+
+  int i;
+  double prob = unif_rand();
+  double onethird = 1.0/3.0;
+
+  if (prob < onethird)
+    return -1;
+  else if (prob < (onethird*2.0))
+    return 0;
+  else return 1;
+
+}
+
+// [[Rcpp::export]]
 List sim_grass_joint(
     int xmax = 100,
     int ymax = 100,
@@ -89,22 +104,8 @@ List sim_grass_joint(
     j = floor(unif_rand()*((double) (i + 1)));
 
     // Picking next pos
-    prob = unif_rand();
-    if (prob < onethird)
-      x = pos.at(j, 1);
-    else if (prob < onethird*2)
-      x = pos.at(j, 1) - 1;
-    else
-      x = pos.at(j, 1) + 1;
-
-    prob = unif_rand();
-    if (prob < onethird)
-      y = pos.at(j, 0);
-    else if (prob < onethird*2)
-      y = pos.at(j, 0) - 1;
-    else
-      y = pos.at(j, 0) + 1;
-
+    x = pos.at(j, 1) + rindex();
+    y = pos.at(j, 0) + rindex();
 
     // Checking bounds
     if (x < 0 | y < 0)
@@ -129,6 +130,130 @@ List sim_grass_joint(
     _["grass"] = m,
     _["positions"] = pos
   );
+}
+
+// [[Rcpp::export]]
+bool is_bridge(
+  int x,
+  int y,
+  const IntegerMatrix & grass,
+  bool recursive = true
+) {
+
+  int xmax = grass.ncol();
+  int ymax = grass.nrow();
+
+  // Looking at the neighbors
+  int nneigh = 0;
+  for (int i = -1; i < 2; i++)
+    for (int j = -1; j < 2; j++) {
+
+      // Don't care about myself
+      if (i == 0 & j == 0)
+        continue;
+
+      // Is it in the border?
+      if ((x + j) < 0 | (x + j) >= xmax)
+        continue;
+
+      if ((y + i) < 0 | (y + i) >= ymax)
+        continue;
+
+      // We found a neighbor
+      if (grass(y + i, x + j) > 0) {
+
+        // If this is the recursive, let's count their neighbors
+        if (recursive) {
+
+          // Am I the only neighbour of my neighbour?
+          if (!is_bridge(x+j, y+i, grass, false))
+            continue;
+           else
+            return true;
+
+        } else {
+          // How many neighbours
+          nneigh++;
+        }
+      }
+    }
+
+  // If only a single neighbour, then it is a bridge
+  if (nneigh == 1)
+    return true;
+
+  return false;
+
+}
+
+// [[Rcpp::export]]
+List mutate_grass(
+  const IntegerMatrix & grass,
+  const NumericMatrix & positions,
+  int nchanges = 1
+) {
+
+  IntegerMatrix newgrass     = clone(grass);
+  NumericMatrix newpositions = clone(positions);
+
+  int p_less, p_more, n = positions.nrow();
+  int xmax = grass.ncol();
+  int ymax = grass.nrow();
+  int x, y;
+  while (nchanges > 0) {
+
+    // Random points
+    p_more = floor(unif_rand()*n);
+    p_less = floor(unif_rand()*n);
+
+    // Is it the same point
+    if (p_less == p_more)
+      continue;
+
+    // Picking next pos
+    x = newpositions.at(p_more, 1) + rindex();
+    y = newpositions.at(p_more, 0) + rindex();
+
+    // Checking bounds
+    if (x < 0 | y < 0)
+      continue;
+
+    if (x >= xmax | y >= ymax)
+      continue;
+
+    // Already painted?
+    if (newgrass.at(y, x) > 0)
+      continue;
+
+    // Is the point to remove a bridge?
+    if (is_bridge(newpositions(p_less, 1), newpositions(p_less, 0), newgrass))
+      continue;
+
+    // Is the old point removing the new one?
+    if ((x == newpositions(p_less, 1)) | (y == newpositions(p_less, 0)))
+      continue;
+
+    // Else, let's change it baby! ---------------------------------------------
+
+    // Removing the point from the grid
+    newgrass.at(newpositions(p_less, 0), newpositions(p_less, 1)) = 0;
+
+    // Adding the point to the grid
+    newgrass.at(y, x) = 1;
+
+    // Adding the point to the list
+    newpositions.at(p_less, 1) = x;
+    newpositions.at(p_less, 0) = y;
+
+    --nchanges;
+
+  }
+
+  return List::create(
+    _["grass"] = newgrass,
+    _["positions"] = newpositions
+  );
+
 }
 
 // [[Rcpp::export]]

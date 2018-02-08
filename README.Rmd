@@ -30,13 +30,12 @@ image(x$grass, col = c("white", "darkgreen"))
 ```
 
 ```{r example2, cache=TRUE}
+set.seed(2)
 ans <- grasshopper(
-  xmax = 200,
-  ymax = 200,
-  area = 200, len = 20,
-  nsim = 1e4, # number of grass simulations
-  subsim = 1e4, # number of times that we make the bug jump in each sim
-  ncpus = 4, ring = .99
+  area = 100, len = 10,
+  nsim = 10000, # number of grass simulations
+  subsim = 5e3, # number of times that we make the bug jump in each sim
+  ring = .99, nchanges = 10
   )
 
 # Plotting the best and the worse

@@ -33,6 +33,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rindex
+int rindex();
+RcppExport SEXP _grasshopper_rindex() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(rindex());
+    return rcpp_result_gen;
+END_RCPP
+}
 // sim_grass_joint
 List sim_grass_joint(int xmax, int ymax, int area);
 RcppExport SEXP _grasshopper_sim_grass_joint(SEXP xmaxSEXP, SEXP ymaxSEXP, SEXP areaSEXP) {
@@ -43,6 +53,33 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type ymax(ymaxSEXP);
     Rcpp::traits::input_parameter< int >::type area(areaSEXP);
     rcpp_result_gen = Rcpp::wrap(sim_grass_joint(xmax, ymax, area));
+    return rcpp_result_gen;
+END_RCPP
+}
+// is_bridge
+bool is_bridge(int x, int y, const IntegerMatrix& grass, bool recursive);
+RcppExport SEXP _grasshopper_is_bridge(SEXP xSEXP, SEXP ySEXP, SEXP grassSEXP, SEXP recursiveSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const IntegerMatrix& >::type grass(grassSEXP);
+    Rcpp::traits::input_parameter< bool >::type recursive(recursiveSEXP);
+    rcpp_result_gen = Rcpp::wrap(is_bridge(x, y, grass, recursive));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mutate_grass
+List mutate_grass(const IntegerMatrix& grass, const NumericMatrix& positions, int nchanges);
+RcppExport SEXP _grasshopper_mutate_grass(SEXP grassSEXP, SEXP positionsSEXP, SEXP nchangesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const IntegerMatrix& >::type grass(grassSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type positions(positionsSEXP);
+    Rcpp::traits::input_parameter< int >::type nchanges(nchangesSEXP);
+    rcpp_result_gen = Rcpp::wrap(mutate_grass(grass, positions, nchanges));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -65,7 +102,10 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_grasshopper_hop", (DL_FUNC) &_grasshopper_hop, 5},
     {"_grasshopper_sim_grass", (DL_FUNC) &_grasshopper_sim_grass, 3},
+    {"_grasshopper_rindex", (DL_FUNC) &_grasshopper_rindex, 0},
     {"_grasshopper_sim_grass_joint", (DL_FUNC) &_grasshopper_sim_grass_joint, 3},
+    {"_grasshopper_is_bridge", (DL_FUNC) &_grasshopper_is_bridge, 4},
+    {"_grasshopper_mutate_grass", (DL_FUNC) &_grasshopper_mutate_grass, 3},
     {"_grasshopper_grasshopper_stat", (DL_FUNC) &_grasshopper_grasshopper_stat, 5},
     {NULL, NULL, 0}
 };

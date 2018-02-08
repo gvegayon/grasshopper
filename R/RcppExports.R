@@ -9,8 +9,20 @@ sim_grass <- function(xmax = 100L, ymax = 100L, area = 100L) {
     .Call(`_grasshopper_sim_grass`, xmax, ymax, area)
 }
 
+rindex <- function() {
+    .Call(`_grasshopper_rindex`)
+}
+
 sim_grass_joint <- function(xmax = 100L, ymax = 100L, area = 100L) {
     .Call(`_grasshopper_sim_grass_joint`, xmax, ymax, area)
+}
+
+is_bridge <- function(x, y, grass, recursive = TRUE) {
+    .Call(`_grasshopper_is_bridge`, x, y, grass, recursive)
+}
+
+mutate_grass <- function(grass, positions, nchanges = 1L) {
+    .Call(`_grasshopper_mutate_grass`, grass, positions, nchanges)
 }
 
 grasshopper_stat <- function(grass, positions, nsim, length, ring) {
