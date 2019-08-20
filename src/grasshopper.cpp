@@ -7,7 +7,7 @@ NumericVector hop(
     double length,
     int xmax = 100,
     int ymax = 100,
-    double theta = 3.0*PI
+    double theta = 10.0
 ) {
 
   // What is the limit to jump
@@ -203,30 +203,63 @@ double grasshopper_stat(
     const IntegerMatrix & grass,
     const NumericMatrix & positions,
     int nsim,
-    double length
+    double length,
+    bool deterministic = true
 ) {
-
-  // Getting the positions
-  IntegerVector p = sample(positions.nrow(), nsim, true) - 1;
 
   double prob = 0.0;
   NumericVector pos(2);
   int xmax = grass.ncol();
   int ymax = grass.nrow();
-  for (int i = 0; i < nsim; i++) {
 
-    // Fecthing and updating position
-    pos = positions.row(p[i]);
-    pos = hop(pos, length, xmax, ymax);
+  // Getting the positions
+  if (!deterministic) {
+    IntegerVector p = sample(positions.nrow(), nsim, true) - 1;
 
-    // Did he fell outside?
-    if (pos[0] == -1)
-      continue;
 
-    if (grass(pos[0], pos[1]) > 0)
-      prob += 1.0/(double)nsim;
+    for (int i = 0; i < nsim; i++) {
+
+      // Fecthing and updating position
+      pos = positions.row(p[i]);
+      pos = hop(pos, length, xmax, ymax);
+
+      // Did he fell outside?
+      if (pos[0] == -1)
+        continue;
+
+      if (grass(pos[0], pos[1]) > 0)
+        prob += 1.0/(double)nsim;
+
+    }
+  } else {
+
+    // How many positions
+    int n = positions.nrow();
+    int i=0, counts = nsim;
+
+    while (--counts > 0) {
+
+      // Random hop from the ith position
+      pos = positions.row(i);
+      pos = hop(pos, length, xmax, ymax);
+
+
+      // Did he fell outside?
+      if (pos[0] == -1)
+        continue;
+
+      if (grass(pos[0], pos[1]) > 0)
+        prob += 1.0/(double)nsim;
+
+      // Should we restart
+      i++;
+      if (i >= n)
+        i = 0;
+
+    }
 
   }
+
 
   return prob;
 
@@ -257,24 +290,34 @@ bool in_hop(
 double grasshopper_stat_deterministic(
     const IntegerMatrix & grass,
     const NumericMatrix & positions,
-    double length
+    double length,
+    int counts = 180
 ) {
 
   // Parameters
   double prob = 0.0, probi;
   int n = positions.nrow();
   double a = 2.0*PI*length;
+  int xmax = grass.ncol();
+  int ymax = grass.nrow();
 
+  NumericVector posi(2);
+  NumericVector pos(2);
   for (int i = 0; i < n; ++i) {
 
     probi = 0.0;
-    for (int j = 0; j < n; ++j) {
+    posi = positions.row(i);
+    for (int j = 0; j < counts; ++j) {
 
-      if (i==j)
+      // Getting new position
+      pos = hop(posi, length, xmax, ymax, 2.0*PI/(double)counts*(double)j);
+
+      // Is it outside?
+      if (pos[0] < 0)
         continue;
 
-      if (in_hop(i, j, positions, length))
-        probi += 1.0/a;
+      if (grass.at(pos[1], pos[0]) > 0)
+        probi += 1.0/(double) counts;
 
     }
 

@@ -70,8 +70,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // grasshopper_stat
-double grasshopper_stat(const IntegerMatrix& grass, const NumericMatrix& positions, int nsim, double length);
-RcppExport SEXP _grasshopper_grasshopper_stat(SEXP grassSEXP, SEXP positionsSEXP, SEXP nsimSEXP, SEXP lengthSEXP) {
+double grasshopper_stat(const IntegerMatrix& grass, const NumericMatrix& positions, int nsim, double length, bool deterministic);
+RcppExport SEXP _grasshopper_grasshopper_stat(SEXP grassSEXP, SEXP positionsSEXP, SEXP nsimSEXP, SEXP lengthSEXP, SEXP deterministicSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -79,7 +79,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const NumericMatrix& >::type positions(positionsSEXP);
     Rcpp::traits::input_parameter< int >::type nsim(nsimSEXP);
     Rcpp::traits::input_parameter< double >::type length(lengthSEXP);
-    rcpp_result_gen = Rcpp::wrap(grasshopper_stat(grass, positions, nsim, length));
+    Rcpp::traits::input_parameter< bool >::type deterministic(deterministicSEXP);
+    rcpp_result_gen = Rcpp::wrap(grasshopper_stat(grass, positions, nsim, length, deterministic));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -98,15 +99,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // grasshopper_stat_deterministic
-double grasshopper_stat_deterministic(const IntegerMatrix& grass, const NumericMatrix& positions, double length);
-RcppExport SEXP _grasshopper_grasshopper_stat_deterministic(SEXP grassSEXP, SEXP positionsSEXP, SEXP lengthSEXP) {
+double grasshopper_stat_deterministic(const IntegerMatrix& grass, const NumericMatrix& positions, double length, int counts);
+RcppExport SEXP _grasshopper_grasshopper_stat_deterministic(SEXP grassSEXP, SEXP positionsSEXP, SEXP lengthSEXP, SEXP countsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const IntegerMatrix& >::type grass(grassSEXP);
     Rcpp::traits::input_parameter< const NumericMatrix& >::type positions(positionsSEXP);
     Rcpp::traits::input_parameter< double >::type length(lengthSEXP);
-    rcpp_result_gen = Rcpp::wrap(grasshopper_stat_deterministic(grass, positions, length));
+    Rcpp::traits::input_parameter< int >::type counts(countsSEXP);
+    rcpp_result_gen = Rcpp::wrap(grasshopper_stat_deterministic(grass, positions, length, counts));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -117,9 +119,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_grasshopper_rindex", (DL_FUNC) &_grasshopper_rindex, 0},
     {"_grasshopper_sim_grass_joint", (DL_FUNC) &_grasshopper_sim_grass_joint, 3},
     {"_grasshopper_mutate_grass", (DL_FUNC) &_grasshopper_mutate_grass, 3},
-    {"_grasshopper_grasshopper_stat", (DL_FUNC) &_grasshopper_grasshopper_stat, 4},
+    {"_grasshopper_grasshopper_stat", (DL_FUNC) &_grasshopper_grasshopper_stat, 5},
     {"_grasshopper_in_hop", (DL_FUNC) &_grasshopper_in_hop, 4},
-    {"_grasshopper_grasshopper_stat_deterministic", (DL_FUNC) &_grasshopper_grasshopper_stat_deterministic, 3},
+    {"_grasshopper_grasshopper_stat_deterministic", (DL_FUNC) &_grasshopper_grasshopper_stat_deterministic, 4},
     {NULL, NULL, 0}
 };
 

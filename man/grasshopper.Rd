@@ -5,8 +5,8 @@
 \alias{plot.grasshopper_sim}
 \title{The grasshopper problem}
 \usage{
-grasshopper(nsim = 10000, area = 100, len = 3, subsim = 5000,
-  nchanges = 5, ring = 0.99, verb = TRUE)
+grasshopper(grass = NULL, nsim = 10000, area = 100, len = 3,
+  subsim = 5000, temp = 5, verb = TRUE, continuous = FALSE)
 
 \method{plot}{grasshopper_sim}(x, y = NULL, id = x$sol, ...)
 }
